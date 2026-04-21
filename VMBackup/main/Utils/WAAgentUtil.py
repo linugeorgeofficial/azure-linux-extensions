@@ -64,10 +64,14 @@ try:
             spec = importlib.util.spec_from_file_location('waagent', agentPath)
             waagent = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(waagent)       
-        except ImportError:
-            # For Python 3.4 and earlier, use imp module
-            import imp
-            waagent = imp.load_source('waagent', agentPath)
+        except (ImportError, AttributeError):
+            # ImportError: importlib.util not available (Python 2)
+            # AttributeError: module_from_spec not available (Python 3.4)
+            try:
+                import imp
+                waagent = imp.load_source('waagent', agentPath)
+            except ImportError:
+                raise Exception("Can't load waagent.")
         except Exception:
             raise Exception("Can't load waagent.")
     else:

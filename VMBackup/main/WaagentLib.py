@@ -23,7 +23,10 @@
 # http://msdn.microsoft.com/en-us/library/cc227259%28PROT.13%29.aspx
 #
 
-import crypt
+try:
+    import crypt
+except ImportError:
+    crypt = None
 import random
 import base64
 
@@ -56,7 +59,54 @@ import zipfile
 import json
 import datetime
 import xml.sax.saxutils
-from distutils.version import LooseVersion
+try:
+    from distutils.version import LooseVersion
+except ImportError:
+    import re as _re_mod
+
+    class LooseVersion:
+        """Minimal version comparison for plugin version strings."""
+
+        def __init__(self, v):
+            self.vstring = str(v)
+            self._parts = self._parse(self.vstring)
+
+        def _parse(self, s):
+            parts = []
+            for p in _re_mod.split(r'[.\-_]', s):
+                try:
+                    parts.append(int(p))
+                except ValueError:
+                    parts.append(p)
+            return tuple(parts)
+
+        def __str__(self):
+            return self.vstring
+
+        def __repr__(self):
+            return 'LooseVersion(%r)' % self.vstring
+
+        def _cmp(self, other):
+            if not isinstance(other, LooseVersion):
+                other = LooseVersion(other)
+            if self._parts == other._parts:
+                return 0
+            return -1 if self._parts < other._parts else 1
+
+        def __eq__(self, other):
+            return self._cmp(other) == 0
+
+        def __lt__(self, other):
+            return self._cmp(other) < 0
+
+        def __le__(self, other):
+            return self._cmp(other) <= 0
+
+        def __gt__(self, other):
+            return self._cmp(other) > 0
+
+        def __ge__(self, other):
+            return self._cmp(other) >= 0
 
 if not hasattr(subprocess, 'check_output'):
     def check_output(*popenargs, **kwargs):
@@ -374,6 +424,8 @@ class AbstractDistro(object):
             return "Failed to set password for {0}: {1}".format(username, output)
 
     def gen_password_hash(self, password, crypt_id, salt_len):
+        if crypt is None:
+            raise NotImplementedError("crypt module is not available (removed in Python 3.13+)")
         collection = string.ascii_letters + string.digits
         salt = ''.join(random.choice(collection) for _ in range(salt_len))
         salt = "${0}${1}".format(crypt_id, salt)

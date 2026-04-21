@@ -603,6 +603,28 @@ class HandlerUtility:
             waagent_version="Unknown"
             return waagent_version
 
+    def _parse_os_release(self):
+        """Parse /etc/os-release for distro info (Python 3.8+ fallback)."""
+        distroname = None
+        distroversion = None
+        with open("/etc/os-release", "r") as osfile:
+            for line in osfile:
+                parts = line.strip().split("=", 1)
+                if len(parts) == 2:
+                    key = parts[0].strip()
+                    value = parts[1].strip().strip('"')
+                    if key == "NAME":
+                        distroname = value
+                    elif key == "VERSION":
+                        distroversion = value
+                    elif key == "VERSION_ID" and distroversion is None:
+                        distroversion = value
+        if distroname and distroversion:
+            return distroname + "-" + distroversion, platform.release()
+        elif distroname:
+            return distroname + "-Unknown", platform.release()
+        return "Unknown", "Unknown"
+
     def get_dist_info(self):
         try:
             if 'FreeBSD' in platform.system():
@@ -611,28 +633,22 @@ class HandlerUtility:
             if 'NS-BSD' in platform.system():
                 release = re.sub('\\-.*$', '', str(platform.release()))
                 return "NS-BSD", release
-            if 'linux_distribution' in dir(platform):
+            if hasattr(platform, 'linux_distribution'):
                 distinfo = list(platform.linux_distribution(full_distribution_name=0))
                 # remove trailing whitespace in distro name
-                if(distinfo[0] == ''):
-                    osfile= open("/etc/os-release", "r")
-                    for line in osfile:
-                        lists=str(line).split("=")
-                        if(lists[0]== "NAME"):
-                            distroname = lists[1].split("\"")
-                        if(lists[0]=="VERSION"):
-                            distroversion = lists[1].split("\"")
-                    osfile.close()
-                    return distroname[1]+"-"+distroversion[1],platform.release()
+                if distinfo[0] == '':
+                    return self._parse_os_release()
                 distinfo[0] = distinfo[0].strip()
-                return  distinfo[0]+"-"+distinfo[1],platform.release()
-            else:
+                return distinfo[0]+"-"+distinfo[1], platform.release()
+            elif hasattr(platform, 'dist'):
                 distinfo = platform.dist()
-                return  distinfo[0]+"-"+distinfo[1],platform.release()
+                return distinfo[0]+"-"+distinfo[1], platform.release()
+            else:
+                return self._parse_os_release()
         except Exception as e:
             errMsg = 'Failed to retrieve the distinfo with error: %s, stack trace: %s' % (str(e), traceback.format_exc())
             self.log(errMsg)
-            return "Unkonwn","Unkonwn"
+            return "Unknown","Unknown"
 
     def substat_new_entry(self,sub_status,code,name,status,formattedmessage):
         sub_status_obj = Utils.Status.SubstatusObj(code,name,status,formattedmessage)
@@ -715,7 +731,7 @@ class HandlerUtility:
         stat_rept.timestampUTC = date_place_holder
         date_string = r'\/Date(' + str((int)(time_span)) + r')\/'
         stat_rept = "[" + json.dumps(stat_rept, cls = ComplexEncoder) + "]"
-        stat_rept = stat_rept.replace('\\\/', '\/') # To fix the datetime format of CreationTime to be consumed by C# DateTimeOffset
+        stat_rept = stat_rept.replace(r'\\/', r'\/') # To fix the datetime format of CreationTime to be consumed by C# DateTimeOffset
         stat_rept = stat_rept.replace(date_place_holder,date_string)
 
         # Add Status as sub-status for Status to be written on Status-File
