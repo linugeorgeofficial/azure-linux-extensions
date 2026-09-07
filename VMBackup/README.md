@@ -1,0 +1,37 @@
+# VMBackup Extension
+
+VMBackup is a Linux VM extension used by Azure Backup to create application-consistent recovery points.
+
+> [!NOTE]
+> Azure Backup installs and manages this extension. Installing it directly outside the Azure Backup service workflow is not supported.
+
+## Deployment
+
+Azure Backup deploys the extension as part of backup operations after backup is enabled for a virtual machine. For configuration instructions, see:
+
+- [Back up a VM with the Azure portal](https://learn.microsoft.com/azure/backup/quick-backup-vm-portal)
+- [Back up a VM with Azure PowerShell](https://learn.microsoft.com/azure/backup/quick-backup-vm-powershell)
+- [Back up a VM with Azure CLI](https://learn.microsoft.com/azure/backup/quick-backup-vm-cli)
+
+## Repository layout
+
+```text
+VMBackup/
+|-- main/          Extension source and bundled runtime files
+|-- test/          Unit tests, excluded from the extension package
+|-- references     Shared repository dependencies used during packaging
+|-- setup.py       Extension packaging script
+`-- README.md
+```
+
+## Run unit tests
+
+The unit tests use Python's standard `unittest` framework and require no additional packages. Use Python 3.6 or later for the test suite; this does not change the extension's runtime compatibility requirements.
+
+From the `VMBackup` directory, run:
+
+```sh
+python -m unittest discover -s test -p "test_*.py" -v
+```
+
+Unit-test modules should be placed under `test/unit/` and named `test_<module>.py`. Keep reusable helpers under `test/helpers/`.
