@@ -26,7 +26,7 @@ VMBackup/
 
 ## Run unit tests
 
-The unit tests use Python's standard `unittest` framework and require no additional packages. Use Python 3.6 or later for the test suite; this does not change the extension's runtime compatibility requirements.
+The unit tests use Python's standard `unittest` framework, require no additional packages, and are compatible with Python 2.7 through Python 3.14. This does not change the extension's runtime compatibility requirements.
 
 From the `VMBackup` directory, run:
 

@@ -5,7 +5,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-from unittest import mock
 
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -56,9 +55,13 @@ class WAAgentUtilLoadTests(unittest.TestCase):
         main_dir = waagent_fixtures.stage_extension_tree(self._extension_root)
         module = waagent_fixtures.import_waagent_util_from(main_dir)
 
-        with mock.patch.object(module.os.path, "isfile", return_value=False):
+        original_isfile = module.os.path.isfile
+        module.os.path.isfile = lambda path: False
+        try:
             self.assertIsNone(module.searchWAAgent())
             self.assertIsNone(module.searchWAAgentOld())
+        finally:
+            module.os.path.isfile = original_isfile
 
 
 if __name__ == "__main__":
