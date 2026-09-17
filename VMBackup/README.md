@@ -35,3 +35,23 @@ python -m unittest discover -s test -p "test_*.py" -v
 ```
 
 Unit-test modules should be placed under `test/unit/` and named `test_<module>.py`. Keep reusable helpers under `test/helpers/`.
+
+## Measure code coverage
+
+Coverage is measured across all Python production modules under `main/`, including modules that are not executed by the current tests. Test modules, helpers, and temporary fixture copies are not counted as separate source files. The initial branch-coverage gate is the measured baseline of 0.41%.
+
+Coverage measurement uses Python 3.12 and `coverage.py` 7.16.0 as development-only dependencies. It does not change the Python versions supported by the unit tests or extension runtime.
+
+From the `VMBackup` directory on Linux, run:
+
+```sh
+python -m pip install coverage==7.16.0
+export VMBACKUP_COVERAGE_TEMP="$(mktemp -d)"
+export TMPDIR="$VMBACKUP_COVERAGE_TEMP"
+export COVERAGE_FILE="$VMBACKUP_COVERAGE_TEMP/.coverage"
+python -m coverage erase
+python -m coverage run -m unittest discover -s test -p "test_*.py" -v
+python -m coverage combine
+python -m coverage report
+rm -rf "$VMBACKUP_COVERAGE_TEMP"
+```
