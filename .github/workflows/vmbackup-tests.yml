@@ -35,6 +35,18 @@ jobs:
         working-directory: VMBackup
         run: python -m unittest discover -s test -p "test_*.py" -v
 
+  test-python-27:
+    runs-on: ubuntu-latest
+    container:
+      image: python:2.7.18-buster@sha256:c934af72b8bd03b9804d5bde2569c320926e70392d708d113a2e71bcf98c8a20
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Run VMBackup tests on Python 2.7
+        working-directory: VMBackup
+        run: python -m unittest discover -s test -p "test_*.py" -v
+
   coverage:
     runs-on: ubuntu-latest
 

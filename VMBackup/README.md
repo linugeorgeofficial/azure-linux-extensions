@@ -36,6 +36,8 @@ python -m unittest discover -s test -p "test_*.py" -v
 
 Unit-test modules should be placed under `test/unit/` and named `test_<module>.py`. Keep reusable helpers under `test/helpers/`.
 
+Pull-request validation runs the unit tests on Python 2.7.18 in a digest-pinned container and on Python 3.8 through Python 3.14 using the GitHub-hosted Python tool cache.
+
 ## Measure code coverage
 
 Coverage is measured across all Python production modules under `main/`, including modules that are not executed by the current tests. Test modules, helpers, and temporary fixture copies are not counted as separate source files. The initial branch-coverage gate is the measured baseline of 0.41%.
